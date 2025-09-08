@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Do you love me?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow-x: hidden;
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .love-gif {
+      max-width: 200px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
+      z-index: 1;
+    }
+
+    h1 {
+      color: #880e4f;
+      font-size: 3em;
+      margin: 0 0 40px 0;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+      z-index: 1;
+    }
+
+    .buttons-container {
+      width: 450px;
+      max-width: 90vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 5;
+    }
+
+    button {
+      width: 180px;
+      padding: 15px 0;
+      font-size: 20px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      user-select: none;
+      color: white;
+      transform-origin: center center;
+      position: relative;
+      z-index: 1;
+    }
+
+    #yes {
+      background-color: #81c784;
+      z-index: 1;
+      transition: transform 0.3s ease;
+    }
+
+    #no {
+      background-color: #e57373;
+      z-index: 2;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      position: relative;
+    }
+
+    .fade-out {
+      opacity: 0;
+      transform: scale(0);
+      transition: all 0.5s ease;
+    }
+
+    .love-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #ffebee, #f8bbd0);
+      color: #d81b60;
+      font-size: 2em;
+      text-align: center;
+      padding: 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .love-screen img {
+      max-width: 90%;
+      height: auto;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.3);
+      margin-top: 20px;
+    }
+
+    .heart {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: red;
+      transform: rotate(45deg);
+      cursor: grab;
+      z-index: 20;
+      transition: transform 0.2s ease;
+      animation: sway 2s ease-in-out infinite;
+      user-select: none;
+      pointer-events: auto;
+    }
+
+    .heart::before,
+    .heart::after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: red;
+      border-radius: 50%;
+    }
+
+    .heart::before {
+      top: -10px;
+      left: 0;
+    }
+
+    .heart::after {
+      left: -10px;
+      top: 0;
+    }
+
+    .dragging {
+      cursor: grabbing;
+      transform: scale(1.5) rotate(45deg);
+      z-index: 30 !important;
+      animation: none !important;
+      transition: none !important;
+    }
+
+    @keyframes sway {
+      0%, 100% {
+        transform: rotate(40deg);
+      }
+      50% {
+        transform: rotate(50deg);
+      }
+    }
+
+    /* Hiệu ứng mặt khóc rơi */
+    .crying-face {
+      position: fixed;
+      font-size: 2rem;
+      pointer-events: none;
+      z-index: 1000;
+      user-select: none;
+      opacity: 0.9;
+      will-change: transform, opacity;
+    }
+  </style>
+</head>
+<body>
+
+  <img
+    class="love-gif"
+    src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXp6eXVudDQwZnRvbThyanFiOW8wdnZwM2ZkaHo0a3NiZGlqMTY1NyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/0OgdJVNjbcIifqSb7U/giphy.gif"
+    alt="Intro Love GIF"
+  />
+
+  <h1>Do you love me? 💕</h1>
+
+  <div class="buttons-container">
+    <button id="yes">Yes</button>
+    <button id="no">No</button>
+  </div>
+
+  <script>
+    const yesBtn = document.getElementById('yes');
+    const noBtn = document.getElementById('no');
+
+    const clickSound = new Audio('soundclickminecraft.mp3');
+    let count = 0;
+    let yesScale = 1;
+    let noScale = 1;
+
+    function darkenRed(count) {
+      let brightness = Math.max(30, 80 - count * 10);
+      return `hsl(0, 70%, ${brightness}%)`;
+    }
+
+    noBtn.addEventListener('click', () => {
+      clickSound.currentTime = 0;
+      clickSound.play();
+
+      spawnCryingFaces(); // ← Thêm hiệu ứng mặt khóc rơi
+
+      count++;
+      yesScale += 0.2;
+      noScale -= 0.1;
+      yesScale = Math.min(1.8, yesScale);
+
+      if (noScale <= 0.2) {
+        noBtn.classList.add('fade-out');
+        setTimeout(() => {
+          noBtn.style.display = 'none';
+        }, 500);
+        return;
+      }
+
+      yesBtn.style.transform = `scale(${yesScale})`;
+      noBtn.style.transform = `scale(${noScale})`;
+      noBtn.style.backgroundColor = darkenRed(count);
+
+      const yesRect = yesBtn.getBoundingClientRect();
+      const noWidth = noBtn.offsetWidth;
+      const noHeight = noBtn.offsetHeight;
+      const padding = 10;
+
+      let newX, newY, tries = 0;
+      const maxTries = 100;
+
+      do {
+        newX = Math.random() * (window.innerWidth - noWidth - padding * 2) + padding;
+        newY = Math.random() * (window.innerHeight - noHeight - padding * 2) + padding;
+        tries++;
+      } while (
+        newX + noWidth > yesRect.left - 10 &&
+        newX < yesRect.right + 10 &&
+        newY + noHeight > yesRect.top - 10 &&
+        newY < yesRect.bottom + 10 &&
+        tries < maxTries
+      );
+
+      noBtn.style.position = 'fixed';
+      noBtn.style.left = `${newX}px`;
+      noBtn.style.top = `${newY}px`;
+
+      if (count === 1) {
+        noBtn.textContent = "Really? 😢";
+      } else if (count === 2) {
+        noBtn.textContent = "Think again... 😞";
+      } else if (count === 3) {
+        noBtn.textContent = "Please don't... 😭";
+      } else if (count >= 4 && count < 6) {
+        noBtn.textContent = "Why??? 💔";
+      } else if (count >= 6) {
+        noBtn.textContent = "😵";
+      }
+    });
+
+    yesBtn.addEventListener('click', () => {
+      clickSound.currentTime = 0;
+      clickSound.play();
+
+      const loveAudio = new Audio('love.mp3');
+      loveAudio.loop = true;
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          loveAudio.pause();
+        } else {
+          loveAudio.currentTime = 0;
+          loveAudio.play();
+        }
+      });
+
+      loveAudio.play();
+
+      document.body.innerHTML = `
+        <div class="love-screen">
+          <h1>I love you too! 💖</h1>
+          <img src="https://media.giphy.com/media/MDJ9IbxxvDUQM/giphy.gif" alt="Love Win GIF" />
+          <p>I knew it... 😍</p>
+        </div>
+      `;
+
+      startHeartRain();
+
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          location.reload();
+        }
+      });
+    });
+
+    function startHeartRain() {
+      function createHeart() {
+        const heart = document.createElement("div");
+        heart.classList.add("heart");
+
+        const startX = Math.random() * window.innerWidth;
+        const startY = -30;
+
+        heart.style.left = `${startX}px`;
+        heart.style.top = `${startY}px`;
+
+        document.body.appendChild(heart);
+
+        let fallDuration = 4000;
+        let removeTimeoutId;
+
+        function fallFromTop() {
+          heart.style.transition = "none";
+          heart.style.top = `${startY}px`;
+          heart.style.left = `${startX}px`;
+          heart.style.opacity = "1";
+
+          setTimeout(() => {
+            heart.style.transition = `top ${fallDuration / 1000}s linear, opacity ${fallDuration / 1000}s linear, left ${fallDuration / 1000}s linear`;
+            heart.style.top = `${window.innerHeight + 50}px`;
+            heart.style.left = `${startX + 30}px`;
+            heart.style.opacity = "0";
+          }, 30);
+
+          if (removeTimeoutId) clearTimeout(removeTimeoutId);
+          removeTimeoutId = setTimeout(() => {
+            heart.remove();
+          }, fallDuration + 300);
+        }
+
+        fallFromTop();
+
+        let isDragging = false;
+
+        heart.addEventListener("pointerdown", (e) => {
+          isDragging = true;
+          heart.classList.add("dragging");
+          heart.style.transition = "none";
+          heart.style.opacity = "1";
+          if (removeTimeoutId) clearTimeout(removeTimeoutId);
+          heart.setPointerCapture(e.pointerId);
+        });
+
+        heart.addEventListener("pointermove", (e) => {
+          if (!isDragging) return;
+          const size = 20;
+          const x = e.clientX - size / 2;
+          const y = e.clientY - size / 2;
+          heart.style.left = `${x}px`;
+          heart.style.top = `${y}px`;
+        });
+
+        heart.addEventListener("pointerup", (e) => {
+          isDragging = false;
+          heart.classList.remove("dragging");
+          heart.releasePointerCapture(e.pointerId);
+
+          const rect = heart.getBoundingClientRect();
+          const currentX = rect.left;
+          const currentY = rect.top;
+
+          fallDuration = 2000;
+
+          heart.style.transition = `top ${fallDuration / 1000}s linear, opacity ${fallDuration / 1000}s linear, left ${fallDuration / 1000}s linear`;
+          heart.style.top = `${window.innerHeight + 50}px`;
+          heart.style.left = `${currentX + 30}px`;
+          heart.style.opacity = "0";
+
+          if (removeTimeoutId) clearTimeout(removeTimeoutId);
+          removeTimeoutId = setTimeout(() => {
+            heart.remove();
+          }, fallDuration + 300);
+        });
+      }
+
+      setInterval(createHeart, 200);
+    }
+
+    // ==== MẶT KHÓC RƠI ====
+    function spawnCryingFaces() {
+      const count = Math.floor(Math.random() * 2) + 3;
+      for (let i = 0; i < count; i++) {
+        const face = document.createElement('div');
+        face.textContent = '😭';
+        face.classList.add('crying-face');
+        face.style.left = `${Math.floor(Math.random() * (window.innerWidth - 30))}px`;
+        face.style.top = '0px';
+        document.body.appendChild(face);
+
+        let start = null;
+        const duration = 4000 + Math.floor(Math.random() * 2000);
+        const baseAmplitude = Math.random() * 4 + 3;
+        const targetAmplitude = Math.random() * 3 + 2;
+        const baseFrequency = Math.random() * 2 + 1;
+        const targetFrequency = Math.random() * 1 + 1;
+        const rotateAmplitude = Math.random() * 10 + 5;
+
+        function animate(timestamp) {
+          if (!start) start = timestamp;
+          const elapsed = timestamp - start;
+          const progress = elapsed / duration;
+          const amplitude = baseAmplitude + (targetAmplitude - baseAmplitude) * progress;
+          const frequency = baseFrequency + (targetFrequency - baseFrequency) * progress;
+          const y = progress * window.innerHeight;
+          const x = amplitude * Math.sin(2 * Math.PI * frequency * (elapsed / 1000));
+          const rotate = rotateAmplitude * Math.sin(2 * Math.PI * 0.5 * (elapsed / 1000));
+          const drift = 10 * Math.sin(2 * Math.PI * 0.3 * (elapsed / 1000) + i);
+
+          face.style.transform = `translate(${x + drift}px, ${y}px) rotate(${rotate}deg)`;
+          face.style.opacity = 1 - progress;
+
+          if (elapsed < duration) {
+            requestAnimationFrame(animate);
+          } else {
+            face.remove();
+          }
+        }
+
+        requestAnimationFrame(animate);
+      }
+    }
+  </script>
+</body>
+</html>
